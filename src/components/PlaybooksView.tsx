@@ -152,7 +152,10 @@ export const PlaybooksView: React.FC<PlaybooksViewProps> = ({
             <button
               type="button"
               onClick={() => {
-                exportPlaybookPDF(activePlaybook);
+                exportPlaybookPDF(
+                  activePlaybook,
+                  completedSteps[activePlaybook.id] ?? []
+                );
                 onNotify(`Exported PDF for ${activePlaybook.title}`);
               }}
               className="inline-flex items-center gap-1.5 rounded-lg border border-lime-700/30 bg-lime-50 px-3 py-1.5 text-xs font-semibold text-lime-900 hover:bg-lime-100 dark:border-lime-400/40 dark:bg-lime-400/10 dark:text-lime-300 dark:hover:bg-lime-400/20"

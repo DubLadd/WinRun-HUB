@@ -30,6 +30,7 @@ import {PlaybooksView} from './components/PlaybooksView';
 import {CustomToolModal} from './components/CustomToolModal';
 import {BackupModal} from './components/BackupModal';
 import {AdminNotesModal} from './components/AdminNotesModal';
+import {ShortcutManagerModal} from './components/ShortcutManagerModal';
 import {OfflineIndicator} from './components/OfflineIndicator';
 
 export default function App() {
@@ -48,6 +49,19 @@ export default function App() {
     () => [...customTools, ...BUILTIN_COMMANDS],
     [customTools]
   );
+
+  const [shortcuts, setShortcuts] = useState<Record<string, string>>(() => {
+    try {
+      const raw = localStorage.getItem('winrun.v4.shortcuts');
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    writeJSON('winrun.v4.shortcuts', shortcuts);
+  }, [shortcuts]);
 
   const [pins, setPins] = useState<string[]>(() =>
     readStringArray(STORAGE_KEYS.pins, STORAGE_KEYS.legacyPins)
@@ -68,6 +82,7 @@ export default function App() {
     useState<CommandTool | null>(null);
   const [isBackupOpen, setIsBackupOpen] = useState(false);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
   const [toastMessage, setToastMessage] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
@@ -176,8 +191,9 @@ export default function App() {
         query,
         sort,
         pins,
+        shortcuts,
       }),
-    [allTools, category, riskFilter, query, sort, pins]
+    [allTools, category, riskFilter, query, sort, pins, shortcuts]
   );
 
   const recentTools = useMemo(
@@ -374,6 +390,7 @@ export default function App() {
           setEditingCustomTool(null);
           setIsCustomModalOpen(true);
         }}
+        onOpenShortcuts={() => setIsShortcutsOpen(true)}
         onOpenBackup={() => setIsBackupOpen(true)}
         onOpenNotes={() => setIsNotesOpen(true)}
         theme={theme}
@@ -860,6 +877,15 @@ export default function App() {
       <AdminNotesModal
         isOpen={isNotesOpen}
         onClose={() => setIsNotesOpen(false)}
+      />
+
+      <ShortcutManagerModal
+        isOpen={isShortcutsOpen}
+        shortcuts={shortcuts}
+        allTools={allTools}
+        onClose={() => setIsShortcutsOpen(false)}
+        onSaveShortcuts={setShortcuts}
+        onNotify={notify}
       />
 
       <OfflineIndicator />

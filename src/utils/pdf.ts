@@ -1,31 +1,38 @@
 import {jsPDF} from 'jspdf';
 import type {CommandTool, Playbook} from '../types/winrun';
 
-export function exportPlaybookPDF(playbook: Playbook): void {
+export function exportPlaybookPDF(
+  playbook: Playbook,
+  completedStepIds: string[] = []
+): void {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
   let y = 20;
 
+  const completedCount = playbook.steps.filter((s) =>
+    completedStepIds.includes(s.id)
+  ).length;
+
   // Header banner background
   doc.setFillColor(18, 27, 39); // #121B27 dark navy
-  doc.rect(0, 0, pageWidth, 45, 'F');
+  doc.rect(0, 0, pageWidth, 48, 'F');
 
   doc.setTextColor(132, 204, 22); // lime green accent
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.text('WINRUN HUB // TROUBLESHOOTING PLAYBOOK', margin, 20);
+  doc.text('WINRUN HUB // TROUBLESHOOTING PLAYBOOK', margin, 18);
 
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(18);
-  doc.text(playbook.title, margin, 32);
+  doc.text(playbook.title, margin, 30);
 
   y = 58;
   doc.setTextColor(100, 116, 139);
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.text(
-    `Category: ${playbook.category}  |  Severity: ${playbook.severity}  |  Est. Time: ~${playbook.estimatedMinutes} min`,
+    `Category: ${playbook.category}  |  Severity: ${playbook.severity}  |  Progress: ${completedCount}/${playbook.steps.length} steps completed`,
     margin,
     y
   );
@@ -57,13 +64,16 @@ export function exportPlaybookPDF(playbook: Playbook): void {
       y = 20;
     }
 
+    const isDone = completedStepIds.includes(step.id);
+
     doc.setFillColor(241, 245, 249);
     doc.roundedRect(margin, y, pageWidth - margin * 2, 26, 2, 2, 'F');
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     doc.setTextColor(15, 23, 42);
-    doc.text(`Step ${idx + 1}: ${step.title}`, margin + 4, y + 6);
+    const statusTag = isDone ? '[✓ Completed]' : '[Pending]';
+    doc.text(`Step ${idx + 1}: ${step.title}  ${statusTag}`, margin + 4, y + 6);
 
     doc.setFont('courier', 'bold');
     doc.setFontSize(9);

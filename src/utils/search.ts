@@ -5,20 +5,45 @@ import type {
   SortOption,
 } from '../types/winrun';
 
-export function scoreToolMatch(tool: CommandTool, rawQuery: string): number {
+export function scoreToolMatch(
+  tool: CommandTool,
+  rawQuery: string,
+  shortcuts?: Record<string, string>
+): number {
   const q = rawQuery.trim().toLowerCase();
   if (!q) return 0;
+
+  const cleanQ = q.startsWith(':') ? q.slice(1) : q;
+
+  // Check user-defined shortcuts manager mapping
+  if (shortcuts) {
+    for (const [key, toolId] of Object.entries(shortcuts)) {
+      if (
+        tool.id === toolId &&
+        (key === q || key === cleanQ || key.includes(cleanQ))
+      ) {
+        return 300;
+      }
+    }
+  }
+
+  // Check built-in or custom tool shortcut property
+  const toolShortcut = tool.shortcut ? tool.shortcut.toLowerCase() : '';
+  if (
+    toolShortcut &&
+    (toolShortcut === q ||
+      toolShortcut === cleanQ ||
+      toolShortcut.includes(cleanQ))
+  ) {
+    return 250;
+  }
 
   const cmd = tool.cmd.toLowerCase();
   const name = tool.name.toLowerCase();
   const desc = tool.desc.toLowerCase();
   const note = tool.note.toLowerCase();
   const tags = tool.tags.map((t) => t.toLowerCase());
-  const shortcut = tool.shortcut ? tool.shortcut.toLowerCase() : '';
-  const cleanQ = q.startsWith(':') ? q.slice(1) : q;
 
-  if (shortcut && (shortcut === q || shortcut === cleanQ)) return 250;
-  if (shortcut && shortcut.includes(cleanQ)) return 150;
   if (cmd === q) return 100;
   if (cmd.startsWith(q)) return 85;
   if (cmd.includes(q)) return 72;
@@ -58,8 +83,9 @@ export function filterAndSortTools(options: {
   query: string;
   sort: SortOption;
   pins: string[];
+  shortcuts?: Record<string, string>;
 }): CommandTool[] {
-  const {tools, category, riskFilter, query, sort, pins} = options;
+  const {tools, category, riskFilter, query, sort, pins, shortcuts} = options;
   const hasQuery = query.trim().length > 0;
 
   const scored = tools
@@ -80,7 +106,7 @@ export function filterAndSortTools(options: {
     .map((tool, index) => ({
       tool,
       index,
-      score: hasQuery ? scoreToolMatch(tool, query) : 0,
+      score: hasQuery ? scoreToolMatch(tool, query, shortcuts) : 0,
     }))
     .filter((item) => !hasQuery || item.score > 0);
 
@@ -100,7 +126,7 @@ export function filterAndSortTools(options: {
       }
       return a.tool.name.localeCompare(b.tool.name);
     }
-    // recommended: search relevance first when searching, otherwise catalog order (custom tools first or pinned preserved cleanly)
+    // recommended: search relevance first when searching, otherwise catalog order
     if (hasQuery && b.score !== a.score) {
       return b.score - a.score;
     }

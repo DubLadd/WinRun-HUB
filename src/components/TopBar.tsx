@@ -8,6 +8,7 @@ interface TopBarProps {
   activeTab: WorkspaceTab;
   onTabChange: (tab: WorkspaceTab) => void;
   onOpenCreate: () => void;
+  onOpenShortcuts: () => void;
   onOpenBackup: () => void;
   onOpenNotes: () => void;
   theme: ThemeMode;
@@ -18,6 +19,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   activeTab,
   onTabChange,
   onOpenCreate,
+  onOpenShortcuts,
   onOpenBackup,
   onOpenNotes,
   theme,
@@ -70,6 +72,13 @@ export const TopBar: React.FC<TopBarProps> = ({
             className="py-1 text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 whitespace-nowrap shrink-0"
           >
             Add Command
+          </button>
+          <button
+            type="button"
+            onClick={onOpenShortcuts}
+            className="py-1 text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 whitespace-nowrap shrink-0"
+          >
+            Shortcuts
           </button>
           <button
             type="button"
